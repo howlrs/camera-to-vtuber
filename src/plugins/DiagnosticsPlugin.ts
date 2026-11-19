@@ -123,6 +123,12 @@ export class DiagnosticsPlugin implements Plugin {
       add(w.eyeYaw, motion.eye.yaw);
       add(w.eyePitch, motion.eye.pitch);
     }
+    const hair = this.app.avatar?.hair;
+    if (hair?.jointCount) {
+      const d = hair.deflection();
+      add(w.hairMean, d.mean);
+      add(w.hairMax, d.max);
+    }
   }
 
   private fresh() {
@@ -133,6 +139,7 @@ export class DiagnosticsPlugin implements Plugin {
       fps: range(), boneSpeed: {} as Record<string, Range>, expr: {} as Record<string, Range>,
       conf: { face: range(), body: range(), left: range(), right: range() },
       eyeYaw: range(), eyePitch: range(),
+      hairMean: range(), hairMax: range(),
       armModes: {} as Record<string, number>,
       marker: '' as string,
     };
@@ -151,11 +158,11 @@ export class DiagnosticsPlugin implements Plugin {
       ['leftUpperArm', new Vector3(1, 0, 0)], ['leftLowerArm', new Vector3(1, 0, 0)],
       ['rightUpperArm', new Vector3(-1, 0, 0)], ['rightLowerArm', new Vector3(-1, 0, 0)],
     ];
-    const rootInv = a.object.getWorldQuaternion(new Quaternion()).invert();
+    // Bone nodes use the avatar convention and the avatar faces +Z in the world, so world = avatar space.
     for (const [b, r] of rest) {
       const n = a.getBoneNode(b);
       if (!n) continue;
-      const q = rootInv.clone().multiply(n.getWorldQuaternion(new Quaternion()));
+      const q = n.getWorldQuaternion(new Quaternion());
       out[b] = r.applyQuaternion(q).toArray().map((v) => +v.toFixed(2));
     }
     return out;
@@ -195,6 +202,9 @@ export class DiagnosticsPlugin implements Plugin {
       expressions: mapRanges(w.expr, 2),
       eye: { yaw: summary(w.eyeYaw, 1), pitch: summary(w.eyePitch, 1) },
       confidence: { face: summary(w.conf.face, 2), body: summary(w.conf.body, 2), left: summary(w.conf.left, 2), right: summary(w.conf.right, 2) },
+      hair: this.app.avatar?.hair
+        ? { ...this.app.avatar.hair.settings, joints: this.app.avatar.hair.jointCount, meanDeg: summary(w.hairMean, 1), maxDeg: summary(w.hairMax, 1) }
+        : null,
       armDirections: this.armDirections(),
       armModes: w.armModes,
       handSwaps: (() => {

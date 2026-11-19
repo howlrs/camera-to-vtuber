@@ -1,6 +1,7 @@
 import type { Object3D } from 'three';
 import type { MaterialCategory, MaterialInfo, MaterialStyle } from '../../shared/protocol.ts';
 import type { HumanBoneName, MotionFrame } from '../core/types.ts';
+import type { HairSettings } from './HairPhysics.ts';
 
 export interface AvatarMeta {
   name: string;
@@ -10,6 +11,16 @@ export interface AvatarMeta {
   credit: string | null;
   /** Permissions summary (avatarPermission / commercialUsage / modification). */
   permissions: string;
+}
+
+/** Hair sway controls (spring-bone hair). See HairPhysics. */
+export interface HairControl {
+  /** Spring joints treated as hair (0 when the model has springs but no hair). */
+  readonly jointCount: number;
+  readonly settings: HairSettings;
+  configure(settings: Partial<HairSettings>): void;
+  /** Current hair bend from rest, in degrees. */
+  deflection(): { mean: number; max: number };
 }
 
 /**
@@ -24,7 +35,13 @@ export interface AvatarRig {
   /** Distance from the head bone up to the top of the head/hair (meters), for accessories. */
   readonly headSize: number;
   readonly hasUpperChest: boolean;
+  /** Hair physics, or null when the model has no spring bones. */
+  readonly hair: HairControl | null;
   hasBone(name: HumanBoneName): boolean;
+  /**
+   * Node that follows a bone with the avatar-convention axes (+Z forward, +X = avatar's left),
+   * for attaching accessories and props.
+   */
   getBoneNode(name: HumanBoneName): Object3D | null;
   apply(motion: MotionFrame): void;
   update(dt: number): void;

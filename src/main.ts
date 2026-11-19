@@ -8,6 +8,7 @@ import { AvatarPlugin } from './plugins/AvatarPlugin.ts';
 import { CapturePlugin } from './plugins/CapturePlugin.ts';
 import { DiagnosticsPlugin } from './plugins/DiagnosticsPlugin.ts';
 import { DesignerPlugin } from './plugins/DesignerPlugin.ts';
+import { HairPlugin } from './plugins/HairPlugin.ts';
 import { LiveDirectorPlugin } from './plugins/LiveDirectorPlugin.ts';
 import { ModelsPlugin } from './plugins/ModelsPlugin.ts';
 import { ReactorPlugin } from './plugins/ReactorPlugin.ts';
@@ -42,6 +43,7 @@ async function main() {
   await app.use(new AvatarPlugin());
   await trackersReady;
   await app.use(new CapturePlugin());
+  await app.use(new HairPlugin());
   await app.use(new ModelsPlugin());
   await app.use(new DesignerPlugin());
   await app.use(new LiveDirectorPlugin());

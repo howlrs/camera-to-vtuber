@@ -4,13 +4,14 @@ import type { BackgroundMode, Framing } from '../render/Stage.ts';
 import { el, toast } from '../ui/Panel.ts';
 
 /**
- * Sample avatars fetched by `npm run setup` from the VRM Consortium specification samples.
- * Both allow avatar use by anyone, commercial use, modification and redistribution
- * (VRM Public License 1.0; see public/avatars/LICENSES.md).
+ * Sample avatars fetched by `npm run setup`: two VRM 1.0 samples from the VRM Consortium
+ * specification repo and a male short-haired VRoid sample (VRM 0.x). All allow avatar use by
+ * anyone, commercial use, modification and redistribution (see public/avatars/LICENSES.md).
  */
 export const SAMPLE_AVATARS = [
   { id: 'twist', label: 'VRM1 Constraint Twist Sample（pixiv / VRoid構造）', url: '/avatars/VRM1_Constraint_Twist_Sample.vrm' },
   { id: 'seed', label: 'Seed-san（VirtualCast）', url: '/avatars/Seed-san.vrm' },
+  { id: 'fumiriya', label: '桜田 史利矢（VRoid サンプル・男性・短髪 / VRM 0.x）', url: '/avatars/Sakurada_Fumiriya.vrm' },
 ] as const;
 
 /** Avatar selection (samples or user .vrm), camera framing, background and license credit. */

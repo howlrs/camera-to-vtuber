@@ -8,6 +8,7 @@ import { HandSolver } from '../../src/solver/HandSolver.ts';
 import { MotionSolver } from '../../src/solver/MotionSolver.ts';
 import { ExpressionMixer } from '../../src/avatar/ExpressionMixer.ts';
 import { categorizeMaterial } from '../../src/avatar/AvatarRig.ts';
+import { toVrm0Offset, toVrm0Rotation } from '../../src/avatar/VrmAvatar.ts';
 import { assignSides } from '../../src/tracking/MediaPipeTrackers.ts';
 import type { HandObservation, Landmark, TrackingFrame } from '../../src/core/types.ts';
 
@@ -284,5 +285,21 @@ describe('hand side assignment', () => {
     pose[16] = { x: 0.2, y: 0.5, z: 0 };
     const out = assignSides([hand(0.21, 'left'), hand(0.79, 'left')], pose);
     expect(out.map((h) => h.side)).toEqual(['right', 'left']);
+  });
+});
+
+describe('VRM 0.x axis conversion', () => {
+  // A VRM 0.x model's normalized bones sit in a frame turned 180° about Y (rotateVRM0).
+  const turned = new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0), Math.PI);
+
+  it('gives the same world rotation as on a VRM 1.0 bone', () => {
+    const q = new Quaternion().setFromEuler(new Euler(0.4, -0.7, 1.1));
+    const world0 = turned.clone().multiply(toVrm0Rotation(q)).multiply(turned.clone().invert());
+    expect(world0.angleTo(q)).toBeLessThan(1e-9);
+  });
+
+  it('moves the hips the same way in the world', () => {
+    const v = new Vector3(0.1, 0.02, -0.05);
+    expect(toVrm0Offset(v).applyQuaternion(turned).distanceTo(v)).toBeLessThan(1e-9);
   });
 });

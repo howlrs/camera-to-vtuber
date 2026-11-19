@@ -17,7 +17,7 @@ const RESUME_KEY = 'vtuber.camera.resume';
 const INPUT_MIRRORED_KEY = 'vtuber.camera.inputMirrored';
 const MIRROR_KEY = 'vtuber.display.mirror';
 /** localStorage wrapper (per-browser preferences), tolerant of disabled storage. */
-const localStore = {
+export const localStore = {
   get(k: string): string | null {
     try {
       return localStorage.getItem(k);

@@ -5,16 +5,18 @@ import {
   Material,
   Mesh,
   Object3D,
+  Quaternion,
   SRGBColorSpace,
   Texture,
   Vector3,
 } from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { MToonMaterial, VRMLoaderPlugin, VRMUtils, type VRM } from '@pixiv/three-vrm';
+import { MToonMaterial, VRMLoaderPlugin, VRMUtils, type VRM, type VRMSpringBoneManager } from '@pixiv/three-vrm';
 import type { MaterialInfo, MaterialStyle } from '../../shared/protocol.ts';
 import type { HumanBoneName, MotionFrame } from '../core/types.ts';
 import { idleBones, restPose } from '../solver/idlePose.ts';
 import { type AvatarMeta, type AvatarRig, categorizeMaterial } from './AvatarRig.ts';
+import { HairPhysics } from './HairPhysics.ts';
 
 interface OriginalLook {
   color: Color;
@@ -28,6 +30,11 @@ interface OriginalLook {
 /**
  * VRM 0.x / 1.0 avatar via @pixiv/three-vrm. Motion is written to normalized humanoid bones,
  * which three-vrm maps onto the model's raw skeleton (so any VRoid / VRM model works as-is).
+ *
+ * MotionFrame uses the VRM 1.0 convention (avatar faces +Z, +X = avatar's left). A VRM 0.x
+ * model faces -Z in its own space and is turned 180° by rotateVRM0, so its normalized bones'
+ * axes are turned too: rotations and offsets are converted with toVrm0Rotation/-Offset, and
+ * objects attached via getBoneNode() go into a holder turned back to the 1.0 convention.
  */
 export class VrmAvatar implements AvatarRig {
   readonly object: Object3D;
@@ -35,15 +42,19 @@ export class VrmAvatar implements AvatarRig {
   readonly headHeight: number;
   readonly headSize: number;
   readonly hasUpperChest: boolean;
+  readonly hair: HairPhysics | null;
   private materials = new Map<string, Material>();
   private original = new Map<string, OriginalLook>();
   private readonly hipsRest = new Vector3();
+  private readonly isVrm0: boolean;
+  private readonly anchors = new Map<HumanBoneName, Object3D>();
   readonly vrm: VRM;
 
   private constructor(vrm: VRM) {
     this.vrm = vrm;
     this.object = vrm.scene;
     this.meta = readMeta(vrm);
+    this.isVrm0 = (vrm.meta as { metaVersion?: string }).metaVersion === '0';
     this.hasUpperChest = !!vrm.humanoid.getNormalizedBoneNode('upperChest');
 
     vrm.scene.traverse((o) => {
@@ -62,9 +73,21 @@ export class VrmAvatar implements AvatarRig {
     const hips = vrm.humanoid.getNormalizedBoneNode('hips');
     if (hips) this.hipsRest.copy(hips.position);
     for (const bone of idleBones()) {
-      vrm.humanoid.getNormalizedBoneNode(bone)?.quaternion.copy(restPose(bone));
+      const node = vrm.humanoid.getNormalizedBoneNode(bone);
+      if (node) this.setRotation(node, restPose(bone));
     }
     vrm.update(0);
+    vrm.scene.updateMatrixWorld(true);
+
+    // HairPhysics steps the springs at a fixed rate, so vrm.update() must not step them too.
+    const springs = vrm.springBoneManager;
+    (vrm as { springBoneManager?: VRMSpringBoneManager }).springBoneManager = undefined;
+    // VRM 0.x files without secondary animation still yield an empty manager.
+    this.hair = springs?.joints.size ? new HairPhysics(springs, vrm.humanoid.getRawBoneNode('head')) : null;
+    // Springs were initialised in the bind (T) pose; restart them from the rest pose so sleeves
+    // and hair don't swing in from the T-pose on the first frames.
+    this.hair?.reset();
+
     const head = vrm.humanoid.getNormalizedBoneNode('head');
     const pos = new Vector3();
     head?.getWorldPosition(pos);
@@ -93,16 +116,30 @@ export class VrmAvatar implements AvatarRig {
   }
 
   getBoneNode(name: HumanBoneName): Object3D | null {
-    return this.vrm.humanoid.getNormalizedBoneNode(name);
+    const node = this.vrm.humanoid.getNormalizedBoneNode(name);
+    if (!node || !this.isVrm0) return node;
+    let anchor = this.anchors.get(name);
+    if (!anchor) {
+      anchor = new Object3D();
+      anchor.name = `${name}_anchor`;
+      anchor.rotation.y = Math.PI; // back to the VRM 1.0 axes
+      node.add(anchor);
+      this.anchors.set(name, anchor);
+    }
+    return anchor;
   }
 
   apply(motion: MotionFrame): void {
     const humanoid = this.vrm.humanoid;
     for (const [bone, q] of motion.bones) {
-      humanoid.getNormalizedBoneNode(bone)?.quaternion.copy(q);
+      const node = humanoid.getNormalizedBoneNode(bone);
+      if (node) this.setRotation(node, q);
     }
     const hips = humanoid.getNormalizedBoneNode('hips');
-    if (hips) hips.position.copy(this.hipsRest).add(motion.hipsOffset ?? ZERO);
+    if (hips) {
+      const offset = motion.hipsOffset ?? ZERO;
+      hips.position.copy(this.hipsRest).add(this.isVrm0 ? toVrm0Offset(offset, _offset) : offset);
+    }
 
     const em = this.vrm.expressionManager;
     if (em) {
@@ -118,6 +155,7 @@ export class VrmAvatar implements AvatarRig {
 
   update(dt: number): void {
     this.vrm.update(dt);
+    this.hair?.update(dt);
   }
 
   // ------------------------------------------------------------------ styling (Gemini designer)
@@ -202,6 +240,11 @@ export class VrmAvatar implements AvatarRig {
     VRMUtils.deepDispose(this.vrm.scene);
   }
 
+  private setRotation(node: Object3D, q: Quaternion): void {
+    if (this.isVrm0) toVrm0Rotation(q, node.quaternion);
+    else node.quaternion.copy(q);
+  }
+
   private allMaterialsNamed(name: string): Material[] {
     const out: Material[] = [];
     this.vrm.scene.traverse((o) => {
@@ -216,6 +259,17 @@ export class VrmAvatar implements AvatarRig {
 }
 
 const ZERO = new Vector3();
+const _offset = new Vector3();
+
+/** A rotation in the VRM 1.0 convention expressed in VRM 0.x axes (turned 180° about Y). */
+export function toVrm0Rotation(q: Quaternion, out = new Quaternion()): Quaternion {
+  return out.set(-q.x, q.y, -q.z, q.w);
+}
+
+/** An offset in the VRM 1.0 convention expressed in VRM 0.x axes (turned 180° about Y). */
+export function toVrm0Offset(v: Vector3, out = new Vector3()): Vector3 {
+  return out.set(-v.x, v.y, -v.z);
+}
 
 function snapshotLook(m: Material): OriginalLook {
   const mt = m as MToonMaterial;
@@ -245,12 +299,13 @@ function readMeta(vrm: VRM): AvatarMeta {
       permissions: `avatar:${m.avatarPermission} / commercial:${m.commercialUsage} / modification:${m.modification}`,
     };
   }
-  // VRM 0.x
+  // VRM 0.x has no credit flag; VRoid Hub license URLs carry it as `credit=unnecessary`.
+  const licenseUrl = String(m.otherLicenseUrl ?? m.licenseName ?? '');
   return {
     name: String(m.title ?? 'VRM'),
     authors: m.author ? [String(m.author)] : [],
-    licenseUrl: String(m.otherLicenseUrl ?? m.licenseName ?? ''),
-    credit: m.author ? `${m.title} by ${m.author}` : null,
+    licenseUrl,
+    credit: m.author && !/[?&]credit=unnecessary\b/.test(licenseUrl) ? `${m.title} by ${m.author}` : null,
     permissions: `allowedUser:${m.allowedUserName} / commercial:${m.commercialUssageName}`,
   };
 }
