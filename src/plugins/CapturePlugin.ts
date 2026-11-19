@@ -16,6 +16,7 @@ const HAND_EDGES = [
 const RESUME_KEY = 'vtuber.camera.resume';
 const INPUT_MIRRORED_KEY = 'vtuber.camera.inputMirrored';
 const MIRROR_KEY = 'vtuber.display.mirror';
+const BLUR_KEY = 'vtuber.display.blurPreview';
 /** localStorage wrapper (per-browser preferences), tolerant of disabled storage. */
 export const localStore = {
   get(k: string): string | null {
@@ -231,6 +232,13 @@ export class CapturePlugin implements Plugin {
     s.toggle('ランドマーク表示', true, (v) => {
       this.showOverlay = v;
       this.canvas.hidden = !v;
+    });
+    // Hides the performer's face in the preview (screenshots, streams) but keeps the overlay sharp.
+    const blurPreview = localStore.get(BLUR_KEY) === '1';
+    this.preview.classList.toggle('blurred', blurPreview);
+    s.toggle('カメラ映像をぼかす（スクリーンショット・配信用）', blurPreview, (v) => {
+      this.preview.classList.toggle('blurred', v);
+      localStore.set(BLUR_KEY, v ? '1' : '0');
     });
     s.row(
       s.button('正面キャリブレーション', () => {

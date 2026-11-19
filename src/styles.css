@@ -127,6 +127,10 @@ body {
   transform: scaleX(-1);
 }
 
+#preview.blurred video {
+  filter: blur(14px);
+}
+
 #panel {
   overflow-y: auto;
   background: var(--surface);
