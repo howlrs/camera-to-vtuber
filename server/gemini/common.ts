@@ -3,6 +3,7 @@ import { HttpError } from './client.ts';
 import { requireModel } from './registry.ts';
 import { getAI } from './client.ts';
 import type { ThinkingConfig, GenerateContentConfig, GenerateContentResponse, Part } from '@google/genai';
+import { appendLog } from '../runlog.ts';
 import type { ModelRole } from '../../shared/protocol.ts';
 
 export function str(v: unknown, max = 2000): string {
@@ -93,10 +94,14 @@ export async function generate(
     if (rung < thinkingLadder.length) cfg.thinkingConfig = thinkingLadder[rung];
     else delete cfg.thinkingConfig;
   }
+  const started = Date.now();
+  const images = contents.filter((p) => p.inlineData).length;
+  const inputKB = Math.round(contents.reduce((n, p) => n + (p.inlineData?.data?.length ?? p.text?.length ?? 0), 0) / 1024);
   for (;;) {
     try {
       const response = await ai.models.generateContent({ model, contents: [{ role: 'user', parts: contents }], config: cfg as GenerateContentConfig });
       if (thinkingLadder) thinkingRung.set(model, rung);
+      logCall(role, model, started, { images, inputKB, dropped: [...dropped], response });
       return { response, model };
     } catch (e) {
       if (thinkingLadder && isInvalidArgument(e) && 'thinkingConfig' in cfg && rung < thinkingLadder.length) {
@@ -106,11 +111,44 @@ export async function generate(
         continue;
       }
       const next = isInvalidArgument(e) ? OPTIONAL_KEYS.find((k) => k in cfg && !dropped.has(k)) : undefined;
-      if (!next) throw mapGeminiError(e);
+      if (!next) {
+        const err = mapGeminiError(e);
+        logCall(role, model, started, { images, inputKB, dropped: [...dropped], error: err.message });
+        throw err;
+      }
       dropped.add(next);
       delete cfg[next];
     }
   }
+}
+
+/** One line per Gemini call in the server output and logs/gemini.jsonl (timings, tokens, outcome). */
+function logCall(
+  role: ModelRole,
+  model: string,
+  started: number,
+  info: { images: number; inputKB: number; dropped: string[]; response?: GenerateContentResponse; error?: string },
+): void {
+  const u = info.response?.usageMetadata;
+  const record = {
+    role,
+    model,
+    seconds: Math.round((Date.now() - started) / 100) / 10,
+    ok: !info.error,
+    images: info.images,
+    inputKB: info.inputKB,
+    promptTokens: u?.promptTokenCount,
+    outputTokens: u?.candidatesTokenCount,
+    thoughtTokens: u?.thoughtsTokenCount,
+    finish: info.response?.candidates?.[0]?.finishReason,
+    outputImage: info.response ? !!firstImage(info.response) : undefined,
+    dropped: info.dropped.length ? info.dropped : undefined,
+    error: info.error?.slice(0, 300),
+  };
+  console.log(
+    `[gemini] ${role} ${model} ${record.seconds}s ${record.ok ? 'ok' : 'error'} images=${info.images} in=${record.promptTokens ?? '-'} out=${record.outputTokens ?? '-'} think=${record.thoughtTokens ?? '-'}${record.finish && record.finish !== 'STOP' ? ` finish=${record.finish}` : ''}${record.error ? ` ${record.error.slice(0, 160)}` : ''}`,
+  );
+  void appendLog('gemini', record).catch(() => {});
 }
 
 export function mapGeminiError(e: unknown): HttpError {

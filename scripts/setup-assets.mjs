@@ -5,7 +5,7 @@
 //  - Sample VRM 1.0 avatars from the VRM Consortium specification repo
 //  - A male short-haired VRoid sample (VRM 0.x, CC0) from OpenGameArt
 // Re-running is safe: existing files are kept unless --force is passed.
-import { copyFile, mkdir, readdir, stat, writeFile } from 'node:fs/promises';
+import { copyFile, mkdir, readdir, rename, stat, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { inflateRawSync } from 'node:zlib';
@@ -26,6 +26,10 @@ const downloads = [
   { url: `${VRM}/Seed-san/vrm/Seed-san.vrm`, to: 'public/avatars/Seed-san.vrm' },
   // VRoid Studio alpha sample "桜田 史利矢" (published as CC0; see public/avatars/LICENSES.md).
   { url: `${OGA}/sakurada_fumiriya.zip`, entry: 'Sakurada Fumiriya.vrm', to: 'public/avatars/Sakurada_Fumiriya.vrm' },
+  // More bases for transcription (other hair styles, long sleeves); CC0 in their own VRM meta.
+  { url: `${OGA}/hairsample_male.zip`, entry: 'HairSample_Male.vrm', to: 'public/avatars/HairSample_Male.vrm' },
+  { url: `${OGA}/hairsample_female.zip`, entry: 'HairSample_Female.vrm', to: 'public/avatars/HairSample_Female.vrm' },
+  { url: `${OGA}/avatarsample_d_darkness.zip`, entry: 'AvatarSample_D_Darkness.vrm', to: 'public/avatars/AvatarSample_D_Darkness.vrm' },
 ];
 
 async function exists(path) {
@@ -82,7 +86,10 @@ async function copyWasm() {
   const dest = join(root, 'public/mediapipe/wasm');
   await mkdir(dest, { recursive: true });
   for (const file of await readdir(src)) {
-    await copyFile(join(src, file), join(dest, file));
+    // Copy then rename: a page loading while setup runs must never read a half-written .wasm.
+    const tmp = join(dest, `.${file}.tmp`);
+    await copyFile(join(src, file), tmp);
+    await rename(tmp, join(dest, file));
   }
   console.log('copy  public/mediapipe/wasm');
 }

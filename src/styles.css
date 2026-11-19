@@ -9,6 +9,7 @@
   --accent-ink: #08223a;
   --warn: #ffcf66;
   --error: #ff8a8a;
+  --ok: #6fdc9a;
   --font: 'Noto Sans JP', 'BIZ UDPGothic', 'Yu Gothic UI', 'Hiragino Sans', system-ui, sans-serif;
   --mono: ui-monospace, 'Cascadia Mono', 'JetBrains Mono', Menlo, monospace;
   --radius: 8px;
@@ -351,6 +352,183 @@ table.models td.missing {
   font-size: 13px;
 }
 
+.persona,
+.analysis {
+  margin-top: 8px;
+}
+
+.analysis {
+  display: grid;
+  gap: 2px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.analysis p {
+  margin: 4px 0 0;
+  font-size: 13px;
+}
+
+.progress {
+  margin-top: 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.progress[data-state='done'] {
+  border-color: var(--ok);
+}
+
+.progress[data-state='failed'] {
+  border-color: var(--error);
+}
+
+.progress-summary {
+  margin: 0 0 6px;
+  font-weight: 700;
+}
+
+.progress[data-state='done'] .progress-summary {
+  color: var(--ok);
+}
+
+.progress[data-state='failed'] .progress-summary {
+  color: var(--error);
+}
+
+.steps {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 13px;
+}
+
+.steps li {
+  display: flex;
+  gap: 8px;
+  color: var(--text-dim);
+}
+
+.steps .mark {
+  flex: none;
+  width: 1em;
+  text-align: center;
+}
+
+.steps li[data-state='running'] {
+  color: var(--text);
+}
+
+.steps li[data-state='running'] .mark {
+  color: var(--accent);
+  animation: pulse 1s ease-in-out infinite alternate;
+}
+
+.steps li[data-state='done'] .mark {
+  color: var(--ok);
+}
+
+.steps li[data-state='warn'] .mark {
+  color: var(--warn);
+}
+
+.steps li[data-state='failed'],
+.steps li[data-state='failed'] .mark {
+  color: var(--error);
+}
+
+@keyframes pulse {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0.3;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .steps li[data-state='running'] .mark {
+    animation: none;
+  }
+}
+
+.dropzone {
+  display: grid;
+  gap: 2px;
+  padding: 14px 12px;
+  border: 1px dashed var(--line);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  cursor: pointer;
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.dropzone strong {
+  color: var(--text);
+  font-size: 14px;
+}
+
+.dropzone:hover,
+.dropzone.over,
+.dropzone:has(+ #ref-files:focus-visible) {
+  border-color: var(--accent);
+  color: var(--text);
+}
+
+.ref-list {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.ref-list:empty {
+  display: none;
+}
+
+.ref {
+  position: relative;
+  margin: 0;
+  aspect-ratio: 3 / 4;
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: #fff;
+}
+
+.ref img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.ref-remove {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 24px;
+  height: 24px;
+  border: 0;
+  border-radius: 50%;
+  background: rgb(0 0 0 / 0.65);
+  color: #fff;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.ref-remove:hover,
+.ref-remove:focus-visible {
+  background: var(--error);
+  color: #000;
+}
+
 .concept img {
   width: 100%;
   border-radius: var(--radius);
@@ -387,6 +565,10 @@ table.models td.missing {
   border: 1px solid var(--line);
   font-size: 13px;
   max-width: 520px;
+}
+
+.toast.success {
+  border-color: var(--ok);
 }
 
 .toast.warn {

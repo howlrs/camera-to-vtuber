@@ -140,6 +140,11 @@ export class AccessoryManager {
     this.attachedTo = head;
   }
 
+  /** Hide or show the accessories (e.g. for a thumbnail of what an export contains). */
+  setVisible(visible: boolean): void {
+    this.group.visible = visible;
+  }
+
   clear(): void {
     this.attachedTo?.remove(this.group);
     this.group.traverse((o) => {

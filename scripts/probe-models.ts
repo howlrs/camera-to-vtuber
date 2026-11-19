@@ -39,11 +39,11 @@ if (!apiKeyConfigured()) {
 }
 await initRegistry();
 console.log('Role resolution:');
-for (const a of getAssignments()) console.log(`  ${a.role.padEnd(10)} -> ${a.model ?? 'NONE'} (${a.source})`);
+for (const a of getAssignments()) console.log(`  ${a.role.padEnd(11)} -> ${a.model ?? 'NONE'} (${a.source})`);
 
 const m = (role: string) => getAssignments().find((a) => a.role === role)?.model ?? null;
 
-for (const role of ['designer', 'general'] as const) {
+for (const role of ['designer', 'transcriber', 'general'] as const) {
   await check(role, m(role), async () => {
     const { response } = await generate(role, [{ text: 'Reply with the single word: ok' }], { maxOutputTokens: 200 });
     return `"${response.text?.trim().slice(0, 30)}"`;

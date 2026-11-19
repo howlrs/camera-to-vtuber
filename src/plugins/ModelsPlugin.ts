@@ -7,6 +7,7 @@ const ROLE_LABEL: Record<ModelRole, string> = {
   reactor: '表情リアクター',
   spatial: '空間認識・座標化',
   designer: 'アバター設計',
+  transcriber: '画像から書き起こし',
   image: 'テクスチャ・設定画',
   imageFast: '背景生成',
   tts: '音声合成',

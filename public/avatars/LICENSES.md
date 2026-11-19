@@ -6,6 +6,11 @@ The VRM files in this directory are fetched by `npm run setup`:
   repository (`vrm-c/vrm-specification/samples`), licensed under the
   [VRM Public License 1.0](https://vrm.dev/licenses/1.0/). Permissions were read from the
   `VRMC_vrm.meta` block of each file.
+- `HairSample_Male.vrm`, `HairSample_Female.vrm` and `AvatarSample_D_Darkness.vrm` (VRoid Studio 0.14.0
+  exports, VRM 0.x) from the same OpenGameArt page (`hairsample_male.zip`, `hairsample_female.zip`,
+  `avatarsample_d_darkness.zip`). Their own `VRM.meta` says `licenseName: CC0` and points to VRoid Hub
+  conditions with redistribution, modification and commercial use allowed and credit unnecessary.
+  They widen the bases the image transcription can choose from (other hair styles, long sleeves).
 - `Sakurada_Fumiriya.vrm` (桜田 史利矢, a male short-haired VRoid Studio alpha sample, VRM 0.x) from
   [OpenGameArt "VRoid Studio CC0 models"](https://opengameart.org/content/vroid-studio-cc0-models)
   (`sakurada_fumiriya.zip`), which lists it as CC0 ("explicitly released by VRoid under CC0").
@@ -16,6 +21,9 @@ The VRM files in this directory are fetched by `npm run setup`:
 | `VRM1_Constraint_Twist_Sample.vrm` | (c) 2022 pixiv Inc. | everyone | corporation | allowModificationRedistribution | allowed | not required |
 | `Seed-san.vrm` | VirtualCast, Inc. | everyone | corporation | allowModificationRedistribution | allowed | **required**: "Seed-san model by VirtualCast, Inc." |
 | `Sakurada_Fumiriya.vrm` | VRoidプロジェクト | Everyone | allow (personal profit, corporate) | allow | allow | unnecessary |
+| `HairSample_Male.vrm` | VRoidプロジェクト | Everyone | allow (personal profit, corporate) | allow | allow | unnecessary |
+| `HairSample_Female.vrm` | VRoidプロジェクト | Everyone | allow (personal profit, corporate) | allow | allow | unnecessary |
+| `AvatarSample_D_Darkness.vrm` | VRoidプロジェクト | Everyone | allow (personal profit, corporate) | allow | allow | unnecessary |
 
 Notes:
 

@@ -6,10 +6,13 @@ import type {
   ImageResponse,
   ModelsResponse,
   ReactRequest,
+  RunLog,
   ReactResponse,
   SpatialRequest,
   SpatialResponse,
   TextureRequest,
+  TranscribeRequest,
+  TranscribeResponse,
   TtsRequest,
   TtsResponse,
 } from '../../shared/protocol.ts';
@@ -39,6 +42,9 @@ export class ApiClient {
   design(req: DesignRequest, signal?: AbortSignal) {
     return this.post<AvatarStyle>('/api/design', req, signal);
   }
+  transcribe(req: TranscribeRequest, signal?: AbortSignal) {
+    return this.post<TranscribeResponse>('/api/transcribe', req, signal);
+  }
   texture(req: TextureRequest, signal?: AbortSignal) {
     return this.post<ImageResponse>('/api/texture', req, signal);
   }
@@ -47,6 +53,10 @@ export class ApiClient {
   }
   concept(req: ConceptRequest, signal?: AbortSignal) {
     return this.post<ImageResponse>('/api/concept', req, signal);
+  }
+  /** Development run log (logs/transcribe.jsonl); failures are ignored. */
+  log(entry: RunLog): void {
+    void this.post('/api/log', entry).catch(() => {});
   }
   react(req: ReactRequest, signal?: AbortSignal) {
     return this.post<ReactResponse>('/api/react', req, signal);

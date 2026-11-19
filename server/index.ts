@@ -20,13 +20,16 @@ import { handleLiveSocket } from './gemini/live.ts';
 import { reactHandler } from './gemini/reactor.ts';
 import { initRegistry, modelsHandler } from './gemini/registry.ts';
 import { spatialHandler } from './gemini/spatial.ts';
+import { transcribeHandler } from './gemini/transcribe.ts';
 import { ttsHandler } from './gemini/tts.ts';
 import { diagHandler } from './diag.ts';
+import { runLogHandler } from './runlog.ts';
 import { sendJson, type RouteHandler } from './http.ts';
 
 const API_ROUTES: Record<string, { method: 'GET' | 'POST'; handler: RouteHandler }> = {
   '/api/models': { method: 'GET', handler: modelsHandler },
   '/api/design': { method: 'POST', handler: designHandler },
+  '/api/transcribe': { method: 'POST', handler: transcribeHandler },
   '/api/texture': { method: 'POST', handler: textureHandler },
   '/api/background': { method: 'POST', handler: backgroundHandler },
   '/api/concept': { method: 'POST', handler: conceptHandler },
@@ -34,6 +37,7 @@ const API_ROUTES: Record<string, { method: 'GET' | 'POST'; handler: RouteHandler
   '/api/spatial': { method: 'POST', handler: spatialHandler },
   '/api/tts': { method: 'POST', handler: ttsHandler },
   '/api/diag': { method: 'POST', handler: diagHandler },
+  '/api/log': { method: 'POST', handler: runLogHandler },
 };
 
 const WS_ROUTES: Record<string, (ws: WebSocket) => void> = {

@@ -9,10 +9,11 @@ import { validateToolCall } from '../../server/gemini/live.ts';
 const mats: MaterialInfo[] = [
   { name: 'Hair', category: 'HAIR', baseColor: '#000000', hasTexture: true },
   { name: 'Eye', category: 'EYE', baseColor: '#ffffff', hasTexture: false },
+  { name: 'Tops', category: 'CLOTH', baseColor: '#ffffff', hasTexture: true },
 ];
 
 describe('sanitizeStyle', () => {
-  it('drops unknown materials, bad colors, textureEdits on untextured materials, clamps bias', () => {
+  it('drops unknown materials, bad colors, textureEdits on untextured or hair materials, clamps bias', () => {
     const s = sanitizeStyle(
       {
         persona: { name: 'A', voice: 'NotAVoice' },
@@ -25,6 +26,7 @@ describe('sanitizeStyle', () => {
         textureEdits: [
           { material: 'Eye', prompt: 'x' },
           { material: 'Hair', prompt: 'blue' },
+          { material: 'Tops', prompt: 'navy' },
           { material: 'Ghost', prompt: 'y' },
         ],
         accessories: [{ type: 'catEars', color: '#abc' }, { type: 'jetpack', color: '#ffffff' }, { type: 'catEars', color: '#ffffff' }],
@@ -35,7 +37,7 @@ describe('sanitizeStyle', () => {
     );
     expect(s.persona.voice).toBe('Kore');
     expect(s.materials).toEqual([{ name: 'Hair', color: '#ff0000' }]);
-    expect(s.textureEdits).toEqual([{ material: 'Hair', prompt: 'blue' }]);
+    expect(s.textureEdits).toEqual([{ material: 'Tops', prompt: 'navy' }]);
     expect(s.accessories).toEqual([{ type: 'catEars', color: '#ffffff' }]);
     expect(s.expressionBias.happy).toBe(0.3);
     expect(s.expressionBias.angry).toBe(0);
