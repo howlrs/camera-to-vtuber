@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="dark" />
+    <link rel="icon" href="data:," />
+    <title>Gemini VTuber Studio</title>
+  </head>
+  <body>
+    <div id="app">
+      <main id="stage-wrap" aria-label="アバター表示">
+        <div id="stage"></div>
+        <div id="hud" aria-live="polite"></div>
+        <div id="guide" role="status" hidden></div>
+        <div id="caption" hidden></div>
+        <div id="credit" hidden></div>
+        <div id="preview" hidden></div>
+      </main>
+      <aside id="panel" aria-label="操作パネル">
+        <header class="panel-head">
+          <h1>Gemini VTuber Studio</h1>
+          <p>カメラ → 座標化 → モーショントラッキング → VRM 描画。Gemini が設計と演出を担当します。</p>
+        </header>
+      </aside>
+    </div>
+    <div id="toasts" aria-live="assertive"></div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.env
+public/models/*.task
+public/mediapipe/
+*.log
+public/avatars/*.vrm
+logs/

@@ -1,0 +1,34 @@
+{
+  "name": "gemini-vtuber",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Real-time VTuber from a local camera: MediaPipe tracking + VRM avatar + Gemini model orchestration",
+  "scripts": {
+    "setup": "node scripts/setup-assets.mjs",
+    "dev": "node --env-file-if-exists=.env server/index.ts",
+    "build": "vite build",
+    "start": "NODE_ENV=production node --env-file-if-exists=.env server/index.ts",
+    "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p server/tsconfig.json",
+    "test": "vitest run",
+    "probe": "node --env-file-if-exists=.env scripts/probe-models.ts"
+  },
+  "engines": {
+    "node": ">=24"
+  },
+  "dependencies": {
+    "@google/genai": "^3.6.1",
+    "@mediapipe/tasks-vision": "^1.2.3",
+    "@pixiv/three-vrm": "^3.5.5",
+    "three": "^0.187.0",
+    "ws": "^8.23.0"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "@types/three": "^0.187.0",
+    "@types/ws": "^8.18.2",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.8",
+    "vitest": "^5.1.1"
+  }
+}

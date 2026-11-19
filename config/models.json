@@ -1,0 +1,37 @@
+{
+  "$comment": "Role -> ordered model candidates. The server picks the first one returned by models.list for this API key. Override any role with env VTUBER_MODEL_<ROLE> (e.g. VTUBER_MODEL_DESIGNER=gemini-2.5-pro).",
+  "roles": {
+    "designer": {
+      "purpose": "ペルソナ設計とサンプルVRMの改変仕様（構造化出力）",
+      "candidates": ["gemini-3.1-pro-preview", "gemini-pro-latest", "gemini-2.5-pro"]
+    },
+    "reactor": {
+      "purpose": "カメラフレームから感情・ジェスチャーを低遅延推定",
+      "candidates": ["gemini-3.5-flash-lite", "gemini-3.1-flash-lite", "gemini-flash-lite-latest", "gemini-2.5-flash-lite"]
+    },
+    "spatial": {
+      "purpose": "手持ち物体・構図の2D座標化（ポインティング）",
+      "candidates": ["gemini-robotics-er-2-preview", "gemini-3.8-flash", "gemini-flash-latest", "gemini-2.5-flash"]
+    },
+    "live": {
+      "purpose": "マイク+カメラ常時ストリーミング、ツール呼び出しで演出、音声応答",
+      "candidates": ["gemini-3.1-flash-live-preview", "gemini-2.5-flash-native-audio-latest", "gemini-2.5-flash-native-audio-preview-12-2025"]
+    },
+    "image": {
+      "purpose": "UV配置を保ったテクスチャ改変・キャラクター設定画",
+      "candidates": ["gemini-3-pro-image", "gemini-3-pro-image-preview", "gemini-3.1-flash-image", "gemini-2.5-flash-image"]
+    },
+    "imageFast": {
+      "purpose": "配信背景の高速生成",
+      "candidates": ["gemini-3.1-flash-image", "gemini-nano-banana-2.1", "gemini-2.5-flash-image"]
+    },
+    "tts": {
+      "purpose": "入力テキストをアバター音声に（口パク連動）",
+      "candidates": ["gemini-3.8-flash-tts", "gemini-3.1-flash-tts-preview", "gemini-2.5-flash-preview-tts"]
+    },
+    "general": {
+      "purpose": "汎用テキスト処理",
+      "candidates": ["gemini-3.8-flash", "gemini-flash-latest", "gemini-3-flash-preview", "gemini-2.5-flash"]
+    }
+  }
+}
